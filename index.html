@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="발표자 뽑기, 모둠 편성, 활동 타이머, 칭찬 점수를 한 명단으로 쓰는 교실용 도구 모음">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>우리반 수업 도구함</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 교무수첩 느낌 — 모눈 종이 바탕, 상단 탭(수첩 인덱스), 도구 하나씩 크게 */
+:root {
+  --paper: #f6f8f4;
+  --grid: #e3e9e0;
+  --card: #ffffff;
+  --ink: #1f2a2e;
+  --muted: #5d6b6e;
+  --line: #cfd8d2;
+  --accent: #1d6a5c;      /* 칠판 초록 */
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe6;
+  --mark: #f3c94a;        /* 형광펜 */
+  --mark-ink: #2d2405;
+  --good: #2f7d3b;
+  --bad: #b2453a;
+  --f-display: "Do Hyeon", "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #151b1c; --grid: #1d2526; --card: #1f2829; --ink: #e6ece8; --muted: #9aa9a6;
+    --line: #34403f; --accent: #5fbfa8; --accent-ink: #0d1a17; --accent-soft: #23403a;
+    --mark: #e2b93a; --mark-ink: #1e1803; --good: #6cc77a; --bad: #e57d71; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #151b1c; --grid: #1d2526; --card: #1f2829; --ink: #e6ece8; --muted: #9aa9a6;
+  --line: #34403f; --accent: #5fbfa8; --accent-ink: #0d1a17; --accent-soft: #23403a;
+  --mark: #e2b93a; --mark-ink: #1e1803; --good: #6cc77a; --bad: #e57d71; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 920px; margin: 0 auto; display: grid; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: 2.1rem; margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h1 .hl { background: linear-gradient(transparent 58%, var(--mark) 58%); padding: 0 .1em; }
+.meta { color: var(--muted); font-size: .9rem; }
+.meta b { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+nav { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); }
+nav button {
+  font: 500 .95rem var(--f-body); color: var(--muted); background: var(--card);
+  border: 2px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0;
+  padding: 8px 14px; cursor: pointer; margin-bottom: -2px;
+}
+nav button[aria-selected="true"] { color: var(--ink); border-color: var(--ink); border-bottom: 2px solid var(--card); }
+nav button:hover { color: var(--ink); }
+
+.panel { background: var(--card); border: 2px solid var(--ink); border-top: none; border-radius: 0 0 10px 10px; padding: 22px; margin-top: -18px; display: grid; gap: 18px; }
+.panel h2 { font-family: var(--f-display); font-weight: 400; font-size: 1.45rem; margin: 0; }
+.panel .lead { color: var(--muted); margin: -12px 0 0; max-width: 60ch; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+button.btn {
+  font: 500 .95rem var(--f-body); border-radius: 8px; padding: 9px 16px; cursor: pointer;
+  border: 2px solid var(--ink); background: var(--card); color: var(--ink);
+}
+button.btn:hover { background: var(--accent-soft); }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+button.btn.primary:hover { filter: brightness(1.08); }
+button.btn.danger { border-color: var(--bad); color: var(--bad); }
+button.btn:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+label.chk { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); cursor: pointer; }
+input[type="number"] { width: 5.5em; font: 500 1rem var(--f-body); padding: 7px 8px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); }
+textarea { width: 100%; min-height: 260px; resize: vertical; font: 1rem/1.7 var(--f-body); padding: 12px 14px; border: 2px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); }
+.note { font-size: .85rem; color: var(--muted); }
+.tag { display: inline-block; font-size: .75rem; letter-spacing: .04em; background: var(--mark); color: var(--mark-ink); border-radius: 4px; padding: 1px 7px; vertical-align: middle; }
+
+/* 뽑기 */
+.stage {
+  border: 2px dashed var(--line); border-radius: 12px; min-height: 200px;
+  display: grid; place-items: center; text-align: center; padding: 24px; background: var(--paper);
+}
+.stage .name { font-family: var(--f-display); font-size: clamp(3rem, 12vw, 6rem); line-height: 1.1; }
+.stage .name.idle { color: var(--muted); font-size: 1.6rem; }
+.stage .name.done { color: var(--accent); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .85rem; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; background: var(--paper); }
+.chip .n { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 4px; }
+
+/* 모둠 */
+.groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.group { border: 2px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--paper); }
+.group h3 { margin: 0 0 6px; font-family: var(--f-display); font-weight: 400; font-size: 1.15rem; display: flex; justify-content: space-between; }
+.group h3 span { font-family: var(--f-body); font-size: .8rem; color: var(--muted); }
+.group ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.group li:first-child::after { content: " · 모둠장"; font-size: .75rem; color: var(--accent); }
+
+/* 타이머 */
+.clock { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: clamp(4rem, 20vw, 9rem); line-height: 1; text-align: center; letter-spacing: -.02em; }
+.clock.end { color: var(--bad); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.bar { height: 10px; border-radius: 99px; background: var(--grid); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--accent); transition: width .25s linear; }
+.center { justify-content: center; }
+
+/* 칭찬 점수 */
+.scores { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.sc { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; border: 2px solid var(--line); border-radius: 10px; padding: 8px 10px; background: var(--paper); }
+.sc .who { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.sc .pts { font-family: var(--f-mono); font-variant-numeric: tabular-nums; min-width: 2.2ch; text-align: center; font-size: 1.15rem; }
+.sc .pts.top { background: var(--mark); color: var(--mark-ink); border-radius: 4px; }
+.sc button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--card); color: var(--ink); font-size: 1rem; cursor: pointer; line-height: 1; }
+.sc button.plus { border-color: var(--good); color: var(--good); }
+.sc button:hover { background: var(--accent-soft); }
+.confirm { display: inline-flex; gap: 8px; align-items: center; font-size: .9rem; }
+
+@media (max-width: 520px) {
+  .panel { padding: 16px; }
+  nav button { padding: 7px 10px; font-size: .88rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clock.end { animation: none; }
+  .bar i { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1><span class="hl">우리반</span> 수업 도구함</h1>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <nav role="tablist" aria-label="도구">
+    <button role="tab" data-tab="pick" aria-selected="true">발표자 뽑기</button>
+    <button role="tab" data-tab="group" aria-selected="false">모둠 편성</button>
+    <button role="tab" data-tab="timer" aria-selected="false">타이머</button>
+    <button role="tab" data-tab="score" aria-selected="false">칭찬 점수</button>
+    <button role="tab" data-tab="roster" aria-selected="false">학생 명단</button>
+  </nav>
+
+  <!-- 발표자 뽑기 -->
+  <section class="panel" data-panel="pick">
+    <h2>발표자 뽑기</h2>
+    <p class="lead">명단에서 무작위로 한 명을 뽑습니다. 이미 뽑힌 학생을 빼면 모두가 한 번씩 돌아가며 발표할 수 있어요.</p>
+    <div class="stage"><div class="name idle" id="pickName">버튼을 눌러 뽑아 보세요</div></div>
+    <div class="row">
+      <button class="btn primary" id="pickBtn">한 명 뽑기</button>
+      <label class="chk"><input type="checkbox" id="noRepeat" checked> 뽑힌 학생 제외</label>
+      <button class="btn" id="pickReset">처음부터 다시</button>
+    </div>
+    <div>
+      <div class="note" id="pickLeft"></div>
+      <div class="chips" id="pickHist" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <!-- 모둠 편성 -->
+  <section class="panel" data-panel="group" hidden>
+    <h2>모둠 편성</h2>
+    <p class="lead">모둠 수를 정하면 인원이 고르게 나뉘도록 섞어 줍니다. 각 모둠의 첫 번째 학생이 모둠장입니다.</p>
+    <div class="row">
+      <label for="gCount">모둠 수</label>
+      <input type="number" id="gCount" min="2" max="12" value="6">
+      <button class="btn primary" id="gBtn">모둠 섞기</button>
+      <button class="btn" id="gCopy">텍스트로 복사</button>
+      <span class="note" id="gInfo"></span>
+    </div>
+    <div class="groups" id="groups"></div>
+  </section>
+
+  <!-- 타이머 -->
+  <section class="panel" data-panel="timer" hidden>
+    <h2>활동 타이머</h2>
+    <p class="lead">TV나 전자칠판에 띄워 두세요. 시간이 끝나면 알림음이 울립니다.</p>
+    <div class="clock" id="clock">05:00</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="row center">
+      <button class="btn" data-min="1">1분</button>
+      <button class="btn" data-min="3">3분</button>
+      <button class="btn" data-min="5">5분</button>
+      <button class="btn" data-min="10">10분</button>
+      <button class="btn" data-min="15">15분</button>
+      <button class="btn" id="tMinus">−1분</button>
+      <button class="btn" id="tPlus">+1분</button>
+    </div>
+    <div class="row center">
+      <button class="btn primary" id="tStart">시작</button>
+      <button class="btn" id="tReset">초기화</button>
+      <label class="chk"><input type="checkbox" id="tSound" checked> 종료 알림음</label>
+    </div>
+  </section>
+
+  <!-- 칭찬 점수 -->
+  <section class="panel" data-panel="score" hidden>
+    <h2>칭찬 점수</h2>
+    <p class="lead">수업 중 바로 점수를 주고 뺄 수 있습니다. 가장 점수가 높은 학생은 형광펜으로 표시됩니다.</p>
+    <div class="row">
+      <button class="btn" id="sSort">점수순 보기</button>
+      <span id="sResetWrap"><button class="btn danger" id="sReset">모두 0점으로</button></span>
+      <span class="note" id="sTotal"></span>
+    </div>
+    <div class="scores" id="scores"></div>
+  </section>
+
+  <!-- 학생 명단 -->
+  <section class="panel" data-panel="roster" hidden>
+    <h2>학생 명단 <span class="tag" id="sampleTag">예시 명단</span></h2>
+    <p class="lead">한 줄에 한 명씩 입력하세요. 번호를 붙여도 됩니다(예: 1 김민준). 저장한 명단은 모든 도구에서 함께 쓰입니다.</p>
+    <textarea id="rosterText" aria-label="학생 명단"></textarea>
+    <div class="row">
+      <button class="btn primary" id="rSave">명단 저장</button>
+      <button class="btn" id="rSample">예시 명단 불러오기</button>
+      <span class="note" id="rMsg"></span>
+    </div>
+    <p class="note">명단과 점수는 지금 쓰는 이 브라우저에만 저장됩니다. 다른 기기에서는 다시 입력해야 해요.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("cls:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("cls:" + k, JSON.stringify(v)); } catch {} }
+  };
+  const SAMPLE = ["김민준","이서연","박도윤","최지우","정하준","강서윤","조은우","윤지민","장시우","임하은",
+    "한유준","오수아","서지호","신예린","권준서","황채원","안이준","송다은","류건우","전소율",
+    "홍현우","고윤서","문지안","배하린"];
+  const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  let roster = store.get("roster", null);
+  let isSample = roster == null;
+  if (isSample) roster = SAMPLE.slice();
+  let scores = store.get("scores", {});
+  let picked = store.get("picked", []);
+
+  function parse(text) {
+    return [...new Set(text.split(/\n/).map((l) => l.replace(/^\s*\d+[.)\s]*\s*/, "").trim()).filter(Boolean))];
+  }
+  function renderMeta() {
+    $("#meta").innerHTML = `학생 <b>${roster.length}</b>명` + (isSample ? ' · <span class="tag">예시 명단</span>' : "");
+    $("#sampleTag").hidden = !isSample;
+  }
+
+  // 탭
+  const tabs = document.querySelectorAll("nav button");
+  function show(id) {
+    tabs.forEach((b) => b.setAttribute("aria-selected", b.dataset.tab === id));
+    document.querySelectorAll("[data-panel]").forEach((p) => (p.hidden = p.dataset.panel !== id));
+    store.set("tab", id);
+    if (id === "score") renderScores();
+    if (id === "pick") renderPick();
+  }
+  tabs.forEach((b) => b.addEventListener("click", () => show(b.dataset.tab)));
+
+  // 뽑기
+  let spinning = false;
+  function pool() { return $("#noRepeat").checked ? roster.filter((n) => !picked.includes(n)) : roster; }
+  function renderPick() {
+    picked = picked.filter((n) => roster.includes(n));
+    const left = pool().length;
+    $("#pickLeft").textContent = $("#noRepeat").checked
+      ? (left ? `남은 학생 ${left}명 / 전체 ${roster.length}명` : "모든 학생이 한 번씩 뽑혔어요. ‘처음부터 다시’를 누르세요.")
+      : `전체 ${roster.length}명 중에서 뽑습니다`;
+    $("#pickHist").innerHTML = picked.map((n, i) => `<span class="chip"><span class="n">${i + 1}</span>${esc(n)}</span>`).join("");
+    $("#pickBtn").disabled = spinning || left === 0;
+  }
+  $("#pickBtn").addEventListener("click", () => {
+    const p = pool(); if (!p.length || spinning) return;
+    const winner = p[Math.floor(Math.random() * p.length)];
+    const el = $("#pickName");
+    const finish = () => {
+      el.className = "name done"; el.textContent = winner;
+      if (!picked.includes(winner)) picked.push(winner);
+      store.set("picked", picked); spinning = false; renderPick();
+    };
+    if (reduce) return finish();
+    spinning = true; $("#pickBtn").disabled = true;
+    el.className = "name";
+    let t = 0; const steps = 16;
+    (function tick() {
+      el.textContent = p[Math.floor(Math.random() * p.length)];
+      if (++t >= steps) return setTimeout(finish, 120);
+      setTimeout(tick, 40 + t * 9);
+    })();
+  });
+  $("#pickReset").addEventListener("click", () => {
+    picked = []; store.set("picked", picked);
+    const el = $("#pickName"); el.className = "name idle"; el.textContent = "버튼을 눌러 뽑아 보세요";
+    renderPick();
+  });
+  $("#noRepeat").addEventListener("change", renderPick);
+
+  // 모둠
+  let lastGroups = [];
+  function makeGroups() {
+    const k = Math.max(2, Math.min(12, parseInt($("#gCount").value, 10) || 2));
+    $("#gCount").value = k;
+    const s = shuffle(roster);
+    lastGroups = Array.from({ length: k }, () => []);
+    s.forEach((n, i) => lastGroups[i % k].push(n));
+    lastGroups = lastGroups.filter((g) => g.length);
+    $("#groups").innerHTML = lastGroups.map((g, i) =>
+      `<div class="group"><h3>${i + 1}모둠 <span>${g.length}명</span></h3><ul>${g.map((n) => `<li>${esc(n)}</li>`).join("")}</ul></div>`).join("");
+    const lo = Math.floor(roster.length / k), hi = Math.ceil(roster.length / k);
+    $("#gInfo").textContent = lo === hi ? `모둠당 ${lo}명` : `모둠당 ${lo}~${hi}명`;
+  }
+  $("#gBtn").addEventListener("click", makeGroups);
+  $("#gCount").addEventListener("change", makeGroups);
+  $("#gCopy").addEventListener("click", async () => {
+    const text = lastGroups.map((g, i) => `${i + 1}모둠: ${g.join(", ")}`).join("\n");
+    const btn = $("#gCopy");
+    try { await navigator.clipboard.writeText(text); btn.textContent = "복사했어요"; }
+    catch { btn.textContent = "복사할 수 없어요"; }
+    setTimeout(() => (btn.textContent = "텍스트로 복사"), 1600);
+  });
+
+  // 타이머
+  let total = 300, remain = 300, running = false, endAt = 0, iv = null, wake = null, actx = null;
+  const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+  function drawClock() {
+    const c = $("#clock");
+    c.textContent = fmt(Math.max(0, Math.ceil(remain)));
+    c.classList.toggle("end", remain <= 0 && total > 0);
+    $("#bar").style.width = (total ? Math.max(0, remain / total) * 100 : 0) + "%";
+    $("#tStart").textContent = running ? "일시정지" : (remain <= 0 ? "다시 시작" : "시작");
+  }
+  function beep() {
+    if (!$("#tSound").checked || !actx) return;
+    [0, .35, .7].forEach((d) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = 880; o.connect(g); g.connect(actx.destination);
+      const t = actx.currentTime + d;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.3, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + .28);
+      o.start(t); o.stop(t + .3);
+    });
+  }
+  function stop() {
+    running = false; clearInterval(iv);
+    if (wake) { wake.release().catch(() => {}); wake = null; }
+  }
+  function setTime(sec) { stop(); total = remain = Math.max(0, sec); drawClock(); }
+  document.querySelectorAll("[data-min]").forEach((b) => b.addEventListener("click", () => setTime(+b.dataset.min * 60)));
+  $("#tPlus").addEventListener("click", () => {
+    remain += 60; total = Math.max(total, remain) ; if (running) endAt += 60000; drawClock();
+  });
+  $("#tMinus").addEventListener("click", () => {
+    remain = Math.max(0, remain - 60); if (running) endAt -= 60000;
+    if (!running) total = remain; drawClock();
+  });
+  $("#tStart").addEventListener("click", async () => {
+    try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); } catch {}
+    if (running) { stop(); drawClock(); return; }
+    if (remain <= 0) remain = total;
+    if (remain <= 0) return;
+    running = true; endAt = Date.now() + remain * 1000;
+    try { wake = await navigator.wakeLock?.request("screen"); } catch { wake = null; }
+    iv = setInterval(() => {
+      remain = (endAt - Date.now()) / 1000;
+      if (remain <= 0) { remain = 0; stop(); beep(); }
+      drawClock();
+    }, 200);
+    drawClock();
+  });
+  $("#tReset").addEventListener("click", () => setTime(total));
+
+  // 칭찬 점수
+  let sortByScore = false, confirmTimer = null;
+  function renderScores() {
+    const list = sortByScore ? roster.slice().sort((a, b) => (scores[b] || 0) - (scores[a] || 0)) : roster;
+    const max = Math.max(0, ...roster.map((n) => scores[n] || 0));
+    $("#scores").innerHTML = list.map((n) => {
+      const v = scores[n] || 0;
+      return `<div class="sc"><span class="who" title="${esc(n)}">${esc(n)}</span>
+        <button aria-label="${esc(n)} 1점 빼기" data-d="-1" data-n="${esc(n)}">−</button>
+        <span class="pts${max > 0 && v === max ? " top" : ""}">${v}</span>
+        <button class="plus" aria-label="${esc(n)} 1점 주기" data-d="1" data-n="${esc(n)}">+</button></div>`;
+    }).join("");
+    const sum = roster.reduce((s, n) => s + (scores[n] || 0), 0);
+    $("#sTotal").textContent = `우리반 합계 ${sum}점`;
+    $("#sSort").textContent = sortByScore ? "명단순 보기" : "점수순 보기";
+  }
+  $("#scores").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-d]"); if (!b) return;
+    const n = b.dataset.n; scores[n] = (scores[n] || 0) + +b.dataset.d;
+    store.set("scores", scores); renderScores();
+  });
+  $("#sSort").addEventListener("click", () => { sortByScore = !sortByScore; renderScores(); });
+  function resetButton() {
+    $("#sResetWrap").innerHTML = '<button class="btn danger" id="sReset">모두 0점으로</button>';
+    $("#sReset").addEventListener("click", askReset);
+  }
+  function askReset() {
+    $("#sResetWrap").innerHTML = '<span class="confirm">정말 모두 지울까요? <button class="btn danger" id="sYes">지우기</button><button class="btn" id="sNo">취소</button></span>';
+    $("#sYes").addEventListener("click", () => { scores = {}; store.set("scores", scores); resetButton(); renderScores(); });
+    $("#sNo").addEventListener("click", resetButton);
+    clearTimeout(confirmTimer); confirmTimer = setTimeout(() => { if ($("#sYes")) resetButton(); }, 6000);
+  }
+  $("#sReset").addEventListener("click", askReset);
+
+  // 명단
+  function fillRoster() { $("#rosterText").value = roster.map((n, i) => `${i + 1} ${n}`).join("\n"); }
+  $("#rSave").addEventListener("click", () => {
+    const list = parse($("#rosterText").value);
+    if (!list.length) { $("#rMsg").textContent = "이름을 한 명 이상 입력하세요."; return; }
+    roster = list; isSample = false; store.set("roster", roster);
+    fillRoster(); renderMeta(); renderPick(); makeGroups();
+    $("#rMsg").textContent = `${roster.length}명을 저장했어요.`;
+  });
+  $("#rSample").addEventListener("click", () => {
+    roster = SAMPLE.slice(); isSample = true;
+    try { localStorage.removeItem("cls:roster"); } catch {}
+    fillRoster(); renderMeta(); renderPick(); makeGroups();
+    $("#rMsg").textContent = "예시 명단을 불러왔어요.";
+  });
+
+  // 시작
+  fillRoster(); renderMeta(); renderPick(); makeGroups(); drawClock();
+  const saved = store.get("tab", "pick");
+  if (document.querySelector(`[data-tab="${saved}"]`)) show(saved);
+})();
+</script>
+</body>
+</html>
