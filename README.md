@@ -14,3 +14,8 @@
 
 저장소 **Settings → Pages** 에서 Source를 `Deploy from a branch`, 브랜치 `main`, 폴더 `/ (root)` 로 지정하면
 `https://<사용자이름>.github.io/<저장소이름>/` 주소로 열립니다.
+
+## 스쿨데이 (`/schoolday/`)
+
+학생용 학습 도구 모음입니다. 시험 D-Day, 공부 타이머, 시간표, 오답 노트를 한곳에서 관리합니다.
+기록은 사용하는 브라우저(localStorage)에만 저장됩니다.
