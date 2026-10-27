@@ -130,7 +130,22 @@ textarea { width: 100%; min-height: 260px; resize: vertical; font: 1rem/1.7 var(
 .sc button { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); background: var(--card); color: var(--ink); font-size: 1rem; cursor: pointer; line-height: 1; }
 .sc button.plus { border-color: var(--good); color: var(--good); }
 .sc button:hover { background: var(--accent-soft); }
-.confirm { display: inline-flex; gap: 8px; align-items: center; font-size: .9rem; }
+.confirm { display: inline-flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .9rem; }
+
+/* 명단 편집 */
+.rlist { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.rlist li { display: grid; grid-template-columns: 2.2em 1fr auto; align-items: center; gap: 4px; border: 2px solid var(--line); border-radius: 10px; padding: 4px 6px; background: var(--paper); }
+.rlist .no { font-family: var(--f-mono); font-variant-numeric: tabular-nums; color: var(--muted); text-align: right; font-size: .9rem; }
+.rlist input { min-width: 0; width: 100%; font: 500 1rem var(--f-body); color: var(--ink); background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px 6px; }
+.rlist input:hover { border-color: var(--line); }
+.rlist input:focus { background: var(--card); border-color: var(--accent); }
+.rlist .del { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 4px 8px; border-radius: 6px; }
+.rlist .del:hover { color: var(--bad); }
+.meta button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+details.bulk { border-top: 2px dashed var(--line); padding-top: 14px; }
+details.bulk summary { cursor: pointer; font-weight: 500; }
+details.bulk[open] { display: grid; gap: 10px; }
+details.bulk p { margin: 0; }
 
 @media (max-width: 520px) {
   .panel { padding: 16px; }
@@ -225,13 +240,24 @@ textarea { width: 100%; min-height: 260px; resize: vertical; font: 1rem/1.7 var(
   <!-- 학생 명단 -->
   <section class="panel" data-panel="roster" hidden>
     <h2>학생 명단 <span class="tag" id="sampleTag">예시 명단</span></h2>
-    <p class="lead">한 줄에 한 명씩 입력하세요. 번호를 붙여도 됩니다(예: 1 김민준). 저장한 명단은 모든 도구에서 함께 쓰입니다.</p>
-    <textarea id="rosterText" aria-label="학생 명단"></textarea>
+    <p class="lead">학생 수를 정하고, 이름 칸을 눌러 원하는 대로 고치세요. 바꾼 내용은 바로 저장되고 모든 도구에 반영됩니다.</p>
     <div class="row">
-      <button class="btn primary" id="rSave">명단 저장</button>
-      <button class="btn" id="rSample">예시 명단 불러오기</button>
-      <span class="note" id="rMsg"></span>
+      <label for="rCount">학생 수</label>
+      <input type="number" id="rCount" min="1" max="60">
+      <button class="btn primary" id="rCountApply">적용</button>
+      <button class="btn" id="rAdd">+ 학생 추가</button>
+      <span class="note" id="rMsg" aria-live="polite"></span>
     </div>
+    <ol class="rlist" id="rList"></ol>
+    <details class="bulk">
+      <summary>여러 명을 한꺼번에 붙여넣기</summary>
+      <p class="note">엑셀이나 나이스에서 복사한 명단을 한 줄에 한 명씩 붙여넣으세요. 번호가 붙어 있어도 됩니다(예: 1 김민준).</p>
+      <textarea id="rosterText" aria-label="학생 명단 한꺼번에 입력"></textarea>
+      <div class="row">
+        <button class="btn primary" id="rSave">이 명단으로 바꾸기</button>
+        <button class="btn" id="rSample">예시 명단 불러오기</button>
+      </div>
+    </details>
     <p class="note">명단과 점수는 지금 쓰는 이 브라우저에만 저장됩니다. 다른 기기에서는 다시 입력해야 해요.</p>
   </section>
 </div>
@@ -260,7 +286,9 @@ textarea { width: 100%; min-height: 260px; resize: vertical; font: 1rem/1.7 var(
     return [...new Set(text.split(/\n/).map((l) => l.replace(/^\s*\d+[.)\s]*\s*/, "").trim()).filter(Boolean))];
   }
   function renderMeta() {
-    $("#meta").innerHTML = `학생 <b>${roster.length}</b>명` + (isSample ? ' · <span class="tag">예시 명단</span>' : "");
+    $("#meta").innerHTML = `학생 <b>${roster.length}</b>명` + (isSample ? ' · <span class="tag">예시 명단</span>' : "") +
+      ' · <button type="button" id="metaEdit">명단 고치기</button>';
+    $("#metaEdit").addEventListener("click", () => show("roster"));
     $("#sampleTag").hidden = !isSample;
   }
 
@@ -421,23 +449,92 @@ textarea { width: 100%; min-height: 260px; resize: vertical; font: 1rem/1.7 var(
   $("#sReset").addEventListener("click", askReset);
 
   // 명단
+  const MAX = 60;
+  const msg = (t) => { $("#rMsg").textContent = t; };
   function fillRoster() { $("#rosterText").value = roster.map((n, i) => `${i + 1} ${n}`).join("\n"); }
+  function renderRoster() {
+    $("#rCount").value = roster.length;
+    $("#rList").innerHTML = roster.map((n, i) =>
+      `<li><span class="no">${i + 1}</span><input id="rName-${i}" data-i="${i}" value="${esc(n)}" maxlength="20" aria-label="${i + 1}번 이름">` +
+      `<button class="del" data-i="${i}" aria-label="${esc(n)} 빼기">✕</button></li>`).join("");
+    $("#rAdd").disabled = roster.length >= MAX;
+  }
+  // 같은 이름이 있으면 뒤에 (2), (3)을 붙여 구분
+  function uniqueName(name, others) {
+    if (!others.includes(name)) return name;
+    let k = 2; while (others.includes(`${name}(${k})`)) k++;
+    return `${name}(${k})`;
+  }
+  function blankName(list) { let k = list.length + 1; while (list.includes(`${k}번`)) k++; return `${k}번`; }
+  function commit(list, opts = {}) {
+    roster = list; isSample = !!opts.sample;
+    if (opts.sample) { try { localStorage.removeItem("cls:roster"); } catch {} } else store.set("roster", roster);
+    fillRoster(); renderRoster(); renderMeta(); renderPick(); makeGroups(); renderScores();
+  }
+  $("#rList").addEventListener("change", (e) => {
+    const inp = e.target.closest("input[data-i]"); if (!inp) return;
+    const i = +inp.dataset.i, old = roster[i];
+    const others = roster.filter((_, j) => j !== i);
+    const name = uniqueName(inp.value.trim().replace(/\s+/g, " ") || `${i + 1}번`, others);
+    if (name === old) { inp.value = old; return; }
+    if (old in scores) { scores[name] = scores[old]; delete scores[old]; store.set("scores", scores); }
+    picked = picked.map((n) => (n === old ? name : n)); store.set("picked", picked);
+    const list = roster.slice(); list[i] = name;
+    commit(list);
+    msg(`${i + 1}번을 ‘${name}’(으)로 바꿨어요.`);
+  });
+  $("#rList").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || !e.target.matches("input[data-i]")) return;
+    e.preventDefault();
+    const next = $(`#rName-${+e.target.dataset.i + 1}`);
+    if (next) { e.target.blur(); next.focus(); next.select(); } else e.target.blur();
+  });
+  $("#rList").addEventListener("click", (e) => {
+    const b = e.target.closest("button.del"); if (!b) return;
+    if (roster.length <= 1) { msg("학생이 최소 한 명은 있어야 해요."); return; }
+    const i = +b.dataset.i, name = roster[i];
+    commit(roster.filter((_, j) => j !== i));
+    msg(`‘${name}’을(를) 명단에서 뺐어요.`);
+  });
+  $("#rAdd").addEventListener("click", () => {
+    if (roster.length >= MAX) return;
+    commit([...roster, blankName(roster)]);
+    const inp = $(`#rName-${roster.length - 1}`); inp.focus(); inp.select();
+    msg("새 학생을 추가했어요. 이름을 입력하세요.");
+  });
+  function applyCount() {
+    const n = Math.max(1, Math.min(MAX, parseInt($("#rCount").value, 10) || 1));
+    $("#rCount").value = n;
+    if (n === roster.length) { msg(`지금도 ${n}명이에요.`); return; }
+    if (n > roster.length) {
+      const list = roster.slice(); while (list.length < n) list.push(blankName(list));
+      const added = n - roster.length;
+      commit(list);
+      msg(`${added}명을 추가했어요. 빈 이름 칸을 채워 주세요.`);
+      return;
+    }
+    const removed = roster.slice(n);
+    const names = removed.slice(0, 3).join(", ") + (removed.length > 3 ? ` 외 ${removed.length - 3}명` : "");
+    $("#rMsg").innerHTML = `<span class="confirm">뒤에서 ${removed.length}명(${esc(names)})이 빠져요.
+      <button class="btn danger" id="rCut">줄이기</button><button class="btn" id="rKeep">취소</button></span>`;
+    $("#rCut").addEventListener("click", () => { commit(roster.slice(0, n)); msg(`${n}명으로 줄였어요.`); });
+    $("#rKeep").addEventListener("click", () => { $("#rCount").value = roster.length; msg(""); });
+  }
+  $("#rCountApply").addEventListener("click", applyCount);
+  $("#rCount").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); applyCount(); } });
   $("#rSave").addEventListener("click", () => {
-    const list = parse($("#rosterText").value);
-    if (!list.length) { $("#rMsg").textContent = "이름을 한 명 이상 입력하세요."; return; }
-    roster = list; isSample = false; store.set("roster", roster);
-    fillRoster(); renderMeta(); renderPick(); makeGroups();
-    $("#rMsg").textContent = `${roster.length}명을 저장했어요.`;
+    const list = parse($("#rosterText").value).slice(0, MAX);
+    if (!list.length) { msg("이름을 한 명 이상 입력하세요."); return; }
+    commit(list);
+    msg(`${roster.length}명으로 명단을 바꿨어요.`);
   });
   $("#rSample").addEventListener("click", () => {
-    roster = SAMPLE.slice(); isSample = true;
-    try { localStorage.removeItem("cls:roster"); } catch {}
-    fillRoster(); renderMeta(); renderPick(); makeGroups();
-    $("#rMsg").textContent = "예시 명단을 불러왔어요.";
+    commit(SAMPLE.slice(), { sample: true });
+    msg("예시 명단을 불러왔어요.");
   });
 
   // 시작
-  fillRoster(); renderMeta(); renderPick(); makeGroups(); drawClock();
+  fillRoster(); renderRoster(); renderMeta(); renderPick(); makeGroups(); drawClock();
   const saved = store.get("tab", "pick");
   if (document.querySelector(`[data-tab="${saved}"]`)) show(saved);
 })();
